@@ -83,7 +83,7 @@ func TestService(t *testing.T) {
 		Reporter(smokeTestReporter),
 	}
 
-	BeforeSuite(func() []byte {
+	BeforeSuite(func() {
 		redisConfig  = loadRedisTestConfig(configPath)
 
 		fmt.Println("------------------------------------------")
@@ -104,8 +104,6 @@ func TestService(t *testing.T) {
 		for _, task := range beforeSuiteSteps {
 			task.Perform()
 		}
-
-		return []byte{}
 	})
 
 	AfterSuite(func() {
