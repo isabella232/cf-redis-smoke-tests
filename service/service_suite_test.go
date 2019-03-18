@@ -54,7 +54,9 @@ type redisTestConfig struct {
 
 func loadRedisTestConfig(path string) redisTestConfig {
 	file, err := os.Open(path)
-	Expect(err).NotTo(HaveOccurred())
+	if err != nil {
+		panic(err)
+	}
 
 	defer file.Close()
 
