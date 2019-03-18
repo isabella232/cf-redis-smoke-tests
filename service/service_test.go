@@ -185,6 +185,10 @@ var _ = Describe("Redis Service", func() {
 
 	Context("for each plan", func() {
 		for _, planName = range redisConfig.PlanNames {
+			fmt.Println("--------------------------------------")
+			fmt.Printf("Testing plan: %s\n", planName)
+			fmt.Println("--------------------------------------")
+
 			AssertLifeCycleBehavior(planName)
 		}
 	})

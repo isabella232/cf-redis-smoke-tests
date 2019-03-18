@@ -83,7 +83,7 @@ func TestService(t *testing.T) {
 		Reporter(smokeTestReporter),
 	}
 
-	SynchronizedBeforeSuite(func() []byte {
+	BeforeSuite(func() []byte {
 		redisConfig  = loadRedisTestConfig(configPath)
 
 		fmt.Println("------------------------------------------")
@@ -106,12 +106,12 @@ func TestService(t *testing.T) {
 		}
 
 		return []byte{}
-	}, func(data []byte) {})
+	})
 
-	SynchronizedAfterSuite(func() {}, func() {
+	AfterSuite(func() {
 		afterSuiteSteps := []*reporter.Step{
 			reporter.NewStep(
-				"Tear down test suit",
+				"Tear down test suite",
 				wfh.Teardown,
 			),
 		}
