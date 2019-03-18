@@ -22,6 +22,14 @@
   revision = "c1a44244c15d3c778eeed5ab6bd2da3d1b105627"
 
 [[projects]]
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  pruneopts = "UT"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
+
+[[projects]]
   digest = "1:f378e8dd67d1fd0e68acac151b900f3c24ec254435c271df8c918152dfdddf93"
   name = "github.com/onsi/ginkgo"
   packages = [
@@ -99,6 +107,7 @@
     "github.com/cloudfoundry-incubator/cf-test-helpers/config",
     "github.com/cloudfoundry-incubator/cf-test-helpers/helpers",
     "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers",
+    "github.com/davecgh/go-spew/spew",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/config",
     "github.com/onsi/ginkgo/types",
