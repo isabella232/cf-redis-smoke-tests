@@ -2,7 +2,9 @@ package service_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
+	"github.com/davecgh/go-spew/spew"
 	"os"
 	"strings"
 	"testing"
@@ -77,23 +79,49 @@ var (
 func TestService(t *testing.T) {
 	smokeTestReporter = new(reporter.SmokeTestReport)
 
-	reporter := []Reporter{
+	testReporter := []Reporter{
 		Reporter(smokeTestReporter),
 	}
 
 	SynchronizedBeforeSuite(func() []byte {
 		redisConfig  = loadRedisTestConfig(configPath)
 
+		fmt.Println("------------------------------------------")
+		fmt.Println("redisConfig:")
+		spew.Dump(redisConfig)
+		fmt.Println("------------------------------------------")
+
 		wfh = workflowhelpers.NewTestSuiteSetup(&redisConfig.Config)
-		wfh.Setup()
+
+		beforeSuiteSteps := []*reporter.Step{
+			reporter.NewStep(
+				"Setup test suite",
+				wfh.Setup,
+			),
+		}
+
+		smokeTestReporter.RegisterBeforeSuiteSteps(beforeSuiteSteps)
+		for _, task := range beforeSuiteSteps {
+			task.Perform()
+		}
 
 		return []byte{}
 	}, func(data []byte) {})
 
 	SynchronizedAfterSuite(func() {}, func() {
-		wfh.Teardown()
+		afterSuiteSteps := []*reporter.Step{
+			reporter.NewStep(
+				"Tear down test suit",
+				wfh.Teardown,
+			),
+		}
+
+		smokeTestReporter.RegisterAfterSuiteSteps(afterSuiteSteps)
+		for _, task := range afterSuiteSteps {
+			task.Perform()
+		}
 	})
 
 	RegisterFailHandler(Fail)
-	RunSpecsWithDefaultAndCustomReporters(t, "P-Redis Smoke Tests", reporter)
+	RunSpecsWithDefaultAndCustomReporters(t, "P-Redis Smoke Tests", testReporter)
 }
