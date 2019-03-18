@@ -3,12 +3,13 @@ package service_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
-	"github.com/davecgh/go-spew/spew"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
+	"github.com/davecgh/go-spew/spew"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	. "github.com/onsi/ginkgo"
@@ -59,7 +60,9 @@ func loadRedisTestConfig(path string) redisTestConfig {
 
 	testConfig := redisTestConfig{}
 	err = json.NewDecoder(file).Decode(&testConfig)
-	Expect(err).NotTo(HaveOccurred())
+	if err != nil {
+		panic(err)
+	}
 
 	testConfig.Config.TimeoutScale = 3
 
@@ -67,9 +70,9 @@ func loadRedisTestConfig(path string) redisTestConfig {
 }
 
 var (
-	configPath   = os.Getenv("CONFIG_PATH")
+	configPath = os.Getenv("CONFIG_PATH")
 
-	redisConfig  redisTestConfig
+	redisConfig = loadRedisTestConfig(configPath)
 
 	smokeTestReporter *reporter.SmokeTestReport
 
@@ -84,8 +87,6 @@ func TestService(t *testing.T) {
 	}
 
 	BeforeSuite(func() {
-		redisConfig  = loadRedisTestConfig(configPath)
-
 		fmt.Println("------------------------------------------")
 		fmt.Println("redisConfig:")
 		spew.Dump(redisConfig)
