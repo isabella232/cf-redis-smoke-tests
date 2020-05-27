@@ -80,6 +80,21 @@ var _ = Describe("Redis Service", func() {
 						app.ReadAssert("mykey", "myvalue"),
 					),
 				}
+				
+				// *********************** WIP START
+				if redisConfig.TLSEnabled {
+					// read env variable for supported versions of TLS
+					specSteps.push(report.NewStep(
+						"Reading the value with a TLSv1.2 client should succeed ",
+						app.ReadTLSAssert("v1.2", "mykey", "myvalue"),
+					))
+					specSteps.push(report.NewStep(
+						"Reading the value with a TLSv1.1 client should fail ",
+						app.ReadTLSAssert("v1.1", "mykey", "protocol not supported"),
+					))
+				}
+				// ** TODO: Add TLSv1/TLSv1.1/TLSv1.2 expects here.
+				// *********************** WIP END
 
 				smokeTestReporter.RegisterSpecSteps(specSteps)
 
@@ -243,6 +258,13 @@ var _ = Describe("Redis Service", func() {
 						"Enable tls",
 						testCF.SetEnv(appName, "tls_enabled", "true"),
 					),
+					// *********************** WIP START
+					reporter.NewStep(
+						"Set TLS Versions to only TLSv1.2",
+						// TODO: Pull versons from configuration.
+						testCF.SetEnv(appName, "tls_versions", ["tlsv1.2"]),
+					),
+					// *********************** WIP END
 				}
 
 				smokeTestReporter.ClearSpecSteps()

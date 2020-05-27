@@ -30,6 +30,10 @@ func (app *App) keyURI(key string) string {
 	return fmt.Sprintf("%s/%s", app.uri, key)
 }
 
+func (app *App) keyTLS_URI(version string, key string) string {
+	return fmt.Sprintf("%s/tls/%s/%s", app.uri, version, key)
+}
+
 // IsRunning pings the App
 func (app *App) IsRunning() func() {
 	return func() {
@@ -72,6 +76,35 @@ func (app *App) ReadAssert(key, expectedValue string) func() {
 		retry.Session(curlFn).WithSessionTimeout(app.timeout).AndBackoff(app.retryBackoff).Until(
 			retry.MatchesOutput(regexp.MustCompile(expectedValue)),
 			fmt.Sprintf(`{"FailReason": "Failed to get %s"}`, app.keyURI(key)),
+		)
+	}
+}
+
+//ReadAssert checks that the value for the given key matches expected
+func (app *App) ReadTLSAssert(tls_version, key, expectedValue string) func() {
+	return func() {
+		curlFn := func() *gexec.Session {
+			fmt.Printf("\nGetting from url: %s\n", app.keyTLS_URI(tls_version, key))
+			return helpers.CurlSkipSSL(false, app.keyTLS_URI(tls_version, key))
+		}
+
+		retry.Session(curlFn).WithSessionTimeout(app.timeout).AndBackoff(app.retryBackoff).Until(
+			retry.MatchesOutput(regexp.MustCompile(expectedValue)),
+			fmt.Sprintf(`{"FailReason": "Failed to get %s"}`, app.keyTLS_URI(tls_version, key)),
+		)
+	}
+}
+
+func (app *App) ReadTLSAssertFail(tls_version, key, expectedValue string) func() {
+	return func() {
+		curlFn := func() *gexec.Session {
+			fmt.Printf("\nGetting from url: %s\n", app.keyTLS_URI(tls_version, key))
+			return helpers.CurlSkipSSL(false, app.keyTLS_URI(tls_version, key))
+		}
+
+		retry.Session(curlFn).WithSessionTimeout(app.timeout).AndBackoff(app.retryBackoff).Until(
+			retry.MatchesOutput(regexp.MustCompile(expectedValue)),
+			fmt.Sprintf(`{"FailReason": "Failed to get %s"}`, app.keyTLS_URI(tls_version, key)),
 		)
 	}
 }
