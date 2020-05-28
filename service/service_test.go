@@ -34,11 +34,11 @@ var _ = Describe("Redis Service", func() {
 
 		//  **************************** WIP START 1/3
 		AddSpecTLS = func(app *redis.App, specSteps []*reporter.Step, version string, enabled bool, key string) []*reporter.Step {
-			details := "Reading the value with a TLS" + version + " client should "
+			details := "read the value with a TLS" + version + " client."
 			if enabled {
-				specSteps = append(specSteps, reporter.NewStep(details+"succeed", app.ReadTLSAssert(version, key, "myvalue")))
+				specSteps = append(specSteps, reporter.NewStep("Can "+details, app.ReadTLSAssert(version, key, "myvalue")))
 			} else {
-				specSteps = append(specSteps, reporter.NewStep(details+"fail", app.ReadTLSAssert(version, key, "protocol not supported:")))
+				specSteps = append(specSteps, reporter.NewStep("Cannot "+details, app.ReadTLSAssert(version, key, "protocol not supported:")))
 			}
 			return specSteps
 		}
@@ -268,16 +268,11 @@ var _ = Describe("Redis Service", func() {
 						"Push the redis sample app to Cloud Foundry",
 						testCF.Push(appName, pushArgs...),
 					),
-					reporter.NewStep(
-						"Enable tls",
-						testCF.SetEnv(appName, "tls_enabled", "true"),
-					),
 
 					//  **************************** WIP START 3/3
 					reporter.NewStep(
-						"Set TLS Versions to TLSv1.1 and TLSv1.2",
-						// TODO: Verify pulling of versons in config.json.erb
-						testCF.SetEnv(appName, "tls_versions", `["tlsv1.1", "tlsv1.2"]`),
+						"Enable tls",
+						testCF.SetEnv(appName, "tls_enabled", "true"),
 					),
 					//  **************************** WIP END 3/3
 				}
