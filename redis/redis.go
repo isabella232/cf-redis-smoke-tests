@@ -3,6 +3,7 @@ package redis
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
@@ -31,7 +32,8 @@ func (app *App) keyURI(key string) string {
 }
 
 func (app *App) keyTLSURI(version string, key string) string {
-	return fmt.Sprintf("%s/tls/%s/%s", app.uri, version, key)
+	tlsVersion := strings.Replace(strings.ToLower(version), "tls", "", -1)
+	return fmt.Sprintf("%s/tls/%s/%s", app.uri, tlsVersion, key)
 }
 
 // IsRunning pings the App
@@ -90,7 +92,7 @@ func (app *App) ReadTLSAssert(tlsVersion, key, expectedValue string) func() {
 
 		retry.Session(curlFn).WithSessionTimeout(app.timeout).AndBackoff(app.retryBackoff).Until(
 			retry.MatchesOutput(regexp.MustCompile(expectedValue)),
-			fmt.Sprintf(`{"FailReason": "Failed to get %s"}`, app.keyTLSURI(tlsVersion, key)),
+			fmt.Sprintf(`{"FailReason": "Failed to get expected value of '%s' from %s"}`, expectedValue, app.keyTLSURI(tlsVersion, key)),
 		)
 	}
 }

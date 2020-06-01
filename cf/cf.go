@@ -26,9 +26,9 @@ type CF struct {
 }
 
 type Credentials struct {
-	Host 		 string
-	Port 		 int
-	TLS_Port 	 int
+	Host         string
+	Port         int
+	TLS_Port     int
 	TLS_Versions []string
 }
 
@@ -533,6 +533,14 @@ func (cf *CF) Logout() func() {
 	}
 }
 
+func (cf CF) GetTLSVersions(serviceInstanceName string, tlsVersions *[]string) func() {
+	return func() {
+		serviceGUID := cf.getServiceInstanceGuid(serviceInstanceName)
+		creds := cf.getServiceKeyCredentials(serviceGUID)
+		*tlsVersions = creds.TLS_Versions
+	}
+}
+
 func (cf CF) CreateServiceKey(serviceInstanceName, serviceKeyName string) func() {
 	serviceKeyFn := func() *gexec.Session {
 		return helpersCF.Cf("create-service-key", serviceInstanceName, serviceKeyName)
@@ -566,12 +574,6 @@ func (cf *CF) getServiceInstanceGuid(serviceName string) string {
 	return strings.Trim(string(session.Out.Contents()), " \n")
 }
 
-func (cf *CF) GetTLSVersions(serviceInstanceName string) []string {
-	serviceGUID := cf.getServiceInstanceGuid(serviceInstanceName)
-	creds := cf.getServiceKeyCredentials(serviceGUID)
-	return creds.TLS_Versions
-}
-
 func (cf *CF) getServiceKeyCredentials(serviceGuid string) Credentials {
 	session := helpersCF.Cf("curl", fmt.Sprintf("/v2/service_keys?q=service_instance_guid:%s", serviceGuid))
 	Eventually(session, cf.ShortTimeout).Should(gexec.Exit(0), `{"FailReason": "Failed to retrieve service bindings for app"}`)
@@ -591,6 +593,9 @@ func (cf *CF) getServiceKeyCredentials(serviceGuid string) Credentials {
 	host, port := resp.Resources[0].Entity.Credentials.Host, resp.Resources[0].Entity.Credentials.Port
 	Expect(host).NotTo(BeEmpty(), `{"FailReason": "Invalid service key, missing host"}`)
 	Expect(port).NotTo(BeZero(), `{"FailReason": "Invalid service key, missing port"}`)
+
+	tls_versions := resp.Resources[0].Entity.Credentials.TLS_Versions
+	Expect(tls_versions).NotTo(BeEmpty(), `{"FailReason": "Invalid service key, missing tls_versions"}`)
 
 	return resp.Resources[0].Entity.Credentials
 }

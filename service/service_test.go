@@ -31,11 +31,10 @@ var _ = Describe("Redis Service", func() {
 		planName            string
 		securityGroupName   string
 		serviceKeyName      string
+		tlsVersions         []string
 
-		//  **************************** WIP START 1/3
 		HasTLSVersion = func(version string) bool {
-			TLSVersions := testCF.GetTLSVersions(serviceInstanceName)
-			for _, v := range TLSVersions {
+			for _, v := range tlsVersions {
 				if version == v {
 					return true
 				}
@@ -43,16 +42,20 @@ var _ = Describe("Redis Service", func() {
 			return false
 		}
 
-		AddSpecTLS = func(app *redis.App, specSteps []*reporter.Step, version string, key string) []*reporter.Step {
-			tlsVersion := strings.ToUpper(version)
-			if HasTLSVersion(version) {
-				return append(specSteps, reporter.NewStep( tlsVersion+" is enabled.", app.ReadTLSAssert(version, key, "myvalue")))
-			} else {
-				return append(specSteps, reporter.NewStep( tlsVersion+" is disabled.", app.ReadTLSAssert(version, key, "protocol not supported:")))
+		CreateTlsSpec = func(app *redis.App, specSteps []*reporter.Step, version string, key string, value string) *reporter.Step {
+			step := reporter.NewStep("tls-description-placeholder", nil)
+			step.Task = func() {
+				tlsMessage := strings.ToUpper(version) + " clients are "
+				if HasTLSVersion(version) {
+					step.Description = tlsMessage + "enabled"
+					app.ReadTLSAssert(version, key, value)()
+				} else {
+					step.Description = tlsMessage + "disabled"
+					app.ReadTLSAssert(version, key, "protocol not supported")()
+				}
 			}
+			return step
 		}
-
-		//  **************************** WIP END 1/3
 
 		AssertLifeCycleBehavior = func(planName string) {
 			It(strings.ToUpper(planName)+": create, bind to, write to, read from, unbind, and destroy a service instance", func() {
@@ -103,13 +106,15 @@ var _ = Describe("Redis Service", func() {
 					),
 				}
 
-				//  **************************** WIP START 2/3
 				if redisConfig.TLSEnabled {
-					specSteps = AddSpecTLS(app, specSteps, "tlsv1.2", "mykey")
-					specSteps = AddSpecTLS(app, specSteps, "tlsv1.1", "mykey")
-					specSteps = AddSpecTLS(app, specSteps, "tlsv1", "mykey")
+					specSteps = append(specSteps, reporter.NewStep(
+						"Get TLS versions from service key",
+						testCF.GetTLSVersions(serviceInstanceName, &tlsVersions),
+					))
+					specSteps = append(specSteps, CreateTlsSpec(app, specSteps, "tlsv1.2", "mykey", "myvalue"))
+					specSteps = append(specSteps, CreateTlsSpec(app, specSteps, "tlsv1.1", "mykey", "myvalue"))
+					specSteps = append(specSteps, CreateTlsSpec(app, specSteps, "tlsv1", "mykey", "myvalue"))
 				}
-				//  **************************** WIP END 2/3
 
 				smokeTestReporter.RegisterSpecSteps(specSteps)
 
@@ -269,15 +274,11 @@ var _ = Describe("Redis Service", func() {
 						"Push the redis sample app to Cloud Foundry",
 						testCF.Push(appName, pushArgs...),
 					),
-
-					//  **************************** WIP START 3/3
 					reporter.NewStep(
 						"Enable tls",
 						testCF.SetEnv(appName, "tls_enabled", "true"),
 					),
-					//  **************************** WIP END 3/3
 				}
-
 				smokeTestReporter.ClearSpecSteps()
 				smokeTestReporter.RegisterSpecSteps(specSteps)
 
