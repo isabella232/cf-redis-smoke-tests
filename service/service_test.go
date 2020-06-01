@@ -33,24 +33,25 @@ var _ = Describe("Redis Service", func() {
 		serviceKeyName      string
 
 		//  **************************** WIP START 1/3
-		AddSpecTLS = func(app *redis.App, specSteps []*reporter.Step, version string, enabled bool, key string) []*reporter.Step {
-			details := "read the value with a TLS" + version + " client."
-			if enabled {
-				specSteps = append(specSteps, reporter.NewStep("Can "+details, app.ReadTLSAssert(version, key, "myvalue")))
-			} else {
-				specSteps = append(specSteps, reporter.NewStep("Cannot "+details, app.ReadTLSAssert(version, key, "protocol not supported:")))
-			}
-			return specSteps
-		}
-
 		HasTLSVersion = func(version string) bool {
-			for _, v := range redisConfig.TLSVersions {
+			TLSVersions := testCF.GetTLSVersions(serviceInstanceName)
+			for _, v := range TLSVersions {
 				if version == v {
 					return true
 				}
 			}
 			return false
 		}
+
+		AddSpecTLS = func(app *redis.App, specSteps []*reporter.Step, version string, key string) []*reporter.Step {
+			tlsVersion := strings.ToUpper(version)
+			if HasTLSVersion(version) {
+				return append(specSteps, reporter.NewStep( tlsVersion+" is enabled.", app.ReadTLSAssert(version, key, "myvalue")))
+			} else {
+				return append(specSteps, reporter.NewStep( tlsVersion+" is disabled.", app.ReadTLSAssert(version, key, "protocol not supported:")))
+			}
+		}
+
 		//  **************************** WIP END 1/3
 
 		AssertLifeCycleBehavior = func(planName string) {
@@ -104,9 +105,9 @@ var _ = Describe("Redis Service", func() {
 
 				//  **************************** WIP START 2/3
 				if redisConfig.TLSEnabled {
-					specSteps = AddSpecTLS(app, specSteps, "v1.2", HasTLSVersion("tlsv1.2"), "mykey")
-					specSteps = AddSpecTLS(app, specSteps, "v1.1", HasTLSVersion("tlsv1.1"), "mykey")
-					specSteps = AddSpecTLS(app, specSteps, "v1", HasTLSVersion("tlsv1"), "mykey")
+					specSteps = AddSpecTLS(app, specSteps, "tlsv1.2", "mykey")
+					specSteps = AddSpecTLS(app, specSteps, "tlsv1.1", "mykey")
+					specSteps = AddSpecTLS(app, specSteps, "tlsv1", "mykey")
 				}
 				//  **************************** WIP END 2/3
 

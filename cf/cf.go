@@ -26,9 +26,10 @@ type CF struct {
 }
 
 type Credentials struct {
-	Host 		string
-	Port 		int
-	TLS_Port 	int
+	Host 		 string
+	Port 		 int
+	TLS_Port 	 int
+	TLS_Versions []string
 }
 
 // API is equivalent to `cf api {endpoint} [--skip-ssl-validation]`
@@ -563,6 +564,12 @@ func (cf *CF) getServiceInstanceGuid(serviceName string) string {
 	Eventually(session, cf.ShortTimeout).Should(gexec.Exit(0), `{"FailReason": "Failed to retrieve GUID for service instance"}`)
 
 	return strings.Trim(string(session.Out.Contents()), " \n")
+}
+
+func (cf *CF) GetTLSVersions(serviceInstanceName string) []string {
+	serviceGUID := cf.getServiceInstanceGuid(serviceInstanceName)
+	creds := cf.getServiceKeyCredentials(serviceGUID)
+	return creds.TLS_Versions
 }
 
 func (cf *CF) getServiceKeyCredentials(serviceGuid string) Credentials {
