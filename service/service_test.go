@@ -43,7 +43,7 @@ var _ = Describe("Redis Service", func() {
 		}
 
 		CreateTlsSpec = func(app *redis.App, specSteps []*reporter.Step, version string, key string, value string) *reporter.Step {
-			step := reporter.NewStep("tls-description-placeholder", nil)
+			step := reporter.NewStep(strings.ToUpper(versions), nil)
 			step.Task = func() {
 				tlsMessage := strings.ToUpper(version) + " clients are "
 				if HasTLSVersion(version) {
