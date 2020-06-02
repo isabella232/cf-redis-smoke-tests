@@ -533,11 +533,10 @@ func (cf *CF) Logout() func() {
 	}
 }
 
-func (cf CF) GetTLSVersions(serviceInstanceName string, tlsVersions *[]string) func() {
+func (cf CF) GetServiceKey(serviceInstanceName string, credentials *Credentials) func() {
 	return func() {
 		serviceGUID := cf.getServiceInstanceGuid(serviceInstanceName)
-		creds := cf.getServiceKeyCredentials(serviceGUID)
-		*tlsVersions = creds.TLS_Versions
+		*credentials = cf.getServiceKeyCredentials(serviceGUID)
 	}
 }
 
@@ -593,9 +592,6 @@ func (cf *CF) getServiceKeyCredentials(serviceGuid string) Credentials {
 	host, port := resp.Resources[0].Entity.Credentials.Host, resp.Resources[0].Entity.Credentials.Port
 	Expect(host).NotTo(BeEmpty(), `{"FailReason": "Invalid service key, missing host"}`)
 	Expect(port).NotTo(BeZero(), `{"FailReason": "Invalid service key, missing port"}`)
-
-	tls_versions := resp.Resources[0].Entity.Credentials.TLS_Versions
-	Expect(tls_versions).NotTo(BeEmpty(), `{"FailReason": "Invalid service key, missing tls_versions"}`)
 
 	return resp.Resources[0].Entity.Credentials
 }
